@@ -2,8 +2,6 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
-(def input (str/trim (slurp (io/resource "2017/1/input.txt"))))
-
 (defn captcha [numbers]
   (let [xs (map #(Long/parseLong (str %)) (str numbers))]
     (:res (reduce
@@ -21,3 +19,5 @@
   (assert (= (captcha 1111) 4))
   (assert (= (captcha 1234) 0))
   (assert (= (captcha 91212129) 9)))
+
+(def input (str/trim (slurp (io/resource "2017/1/input.txt"))))
