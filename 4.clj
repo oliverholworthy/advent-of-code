@@ -4,11 +4,18 @@
 
 ;; Part One
 
-(def input-passphrases (str/split-lines (str/trim (slurp (io/resource "2017/4/passphrases.txt")))))
+(def input-passphrases
+  (str/split-lines (str/trim (slurp (io/resource "2017/4/passphrases.txt")))))
 
-(defn valid-words? [passphrase]
-  (let [words (str/split passphrase #" ")]
-    (= (count (set words)) (count words))))
+(defn to-words [passphrase] (str/split passphrase #" "))
+
+(defn get-valid-fn [word-fn]
+  (fn [passphrase]
+    (let [words (to-words passphrase)]
+      (= (count (word-fn words))
+         (count words)))))
+
+(def valid-words? (get-valid-fn set))
 
 ;; (count (filter valid-words? input-passphrases))
 ;; => 451
@@ -16,9 +23,7 @@
 
 ;; Part Two
 
-(defn valid-anagrams? [passphrase]
-  (let [words (str/split passphrase #" ")]
-    (= (count (set (map set words))) (count (map set words)))))
+(def valid-anagrams? (get-valid-fn (comp set (partial map set))))
 
 ;; (count (filter valid-anagrams? input-passphrases))
 ;; => 223
