@@ -1,4 +1,4 @@
-(ns advent-of-code.2017.6
+(ns advent-of-code.2017.06
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
@@ -37,7 +37,7 @@
                (inc steps))))))
 
 (def input
-  (->> (slurp (io/resource "2017/6/input.txt"))
+  (->> (slurp (io/resource "2017/06/input.txt"))
        (str/trim )
        (#(str/split % #"\s+"))
        (mapv #(Long/parseLong %))))

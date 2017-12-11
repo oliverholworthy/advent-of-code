@@ -1,4 +1,4 @@
-(ns advent-of-code.2017.3)
+(ns advent-of-code.2017.03)
 
 ;; Part One
 

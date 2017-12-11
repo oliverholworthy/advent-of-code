@@ -1,4 +1,4 @@
-(ns advent-of-code.2017.8
+(ns advent-of-code.2017.08
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
@@ -62,5 +62,5 @@
                  new-highest
                  highest))))))
 
-(def input (parse-input (io/resource "2017/8/input.txt")))
-(def input-sample (parse-input (io/resource "2017/8/input-sample.txt")))
+(def input (parse-input (io/resource "2017/08/input.txt")))
+(def input-sample (parse-input (io/resource "2017/08/input-sample.txt")))

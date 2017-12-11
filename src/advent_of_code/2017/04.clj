@@ -1,11 +1,11 @@
-(ns advent-of-code.2017.4
+(ns advent-of-code.2017.04
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
 ;; Part One
 
 (def input-passphrases
-  (str/split-lines (str/trim (slurp (io/resource "2017/4/passphrases.txt")))))
+  (str/split-lines (str/trim (slurp (io/resource "2017/04/passphrases.txt")))))
 
 (defn to-words [passphrase] (str/split passphrase #" "))
 

@@ -1,9 +1,9 @@
-(ns advent-of-code.2017.5
+(ns advent-of-code.2017.05
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
 (def input
-  (->> (slurp (io/resource "2017/5/input.txt"))
+  (->> (slurp (io/resource "2017/05/input.txt"))
        (str/trim)
        (str/split-lines)
        (mapv #(Long/parseLong %))))

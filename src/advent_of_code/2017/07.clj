@@ -1,4 +1,4 @@
-(ns advent-of-code.2017.7
+(ns advent-of-code.2017.07
   (:require
    [clojure.java.io :as io]
    [clojure.string :as str]
@@ -20,7 +20,7 @@
        (into {})))
 
 (def input (read-input (io/resource "2017/7/input.txt")))
-(def input-sample (read-input (io/resource "2017/7/input-sample.txt")))
+(def input-sample (read-input (io/resource "2017/07/input-sample.txt")))
 
 
 ;; Part One

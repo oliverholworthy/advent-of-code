@@ -1,9 +1,9 @@
-(ns advent-of-code.2017.9
+(ns advent-of-code.2017.09
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.walk :as walk]))
 
-(def input (str/trim (slurp (io/resource "2017/9/input.txt"))))
+(def input (str/trim (slurp (io/resource "2017/09/input.txt"))))
 
 (defn read-stream
   "Read stream into groups represented by nested vectors

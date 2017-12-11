@@ -1,4 +1,4 @@
-(ns advent-of-code.2017.2
+(ns advent-of-code.2017.02
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
@@ -28,7 +28,7 @@
                    [2 4 6 8]])
                18))))
 
-(def input-part-one (read-input (io/resource "2017/2/input.txt")))
+(def input-part-one (read-input (io/resource "2017/02/input.txt")))
 
 
 ;; Part Two
@@ -61,4 +61,4 @@
                9))))
 
 (def input-part-two
-  (read-input (io/resource "2017/2/input-2.txt")))
+  (read-input (io/resource "2017/02/input-2.txt")))

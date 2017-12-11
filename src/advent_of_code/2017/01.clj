@@ -1,4 +1,4 @@
-(ns advent-of-code.2017.1
+(ns advent-of-code.2017.01
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
@@ -29,7 +29,7 @@
     (assert (= (f 1234) 0))
     (assert (= (f 91212129) 9))))
 
-(def input-part-one (str/trim (slurp (io/resource "2017/1/input-1.txt"))))
+(def input-part-one (str/trim (slurp (io/resource "2017/01/input-1.txt"))))
 
 
 ;; Part Two
@@ -44,4 +44,4 @@
     (assert (= (f 123123) 12))
     (assert (= (f 12131415) 4))))
 
-(def input-part-two (str/trim (slurp (io/resource "2017/1/input-2.txt"))))
+(def input-part-two (str/trim (slurp (io/resource "2017/01/input-2.txt"))))
