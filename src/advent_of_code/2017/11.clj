@@ -13,8 +13,8 @@
 (defn move-dir [move] (get move-dirs move))
 (defn manhattan [pos] (/ (reduce + (mapv #(Math/abs %) pos)) 2))
 (defn apply-dirs [dirs] (apply mapv + dirs))
-(defn apply-move [position dir] (mapv + position dir))
-(defn positions [dirs] (reductions apply-move [0 0 0] dirs))
+(defn apply-dir [pos dir] (mapv + pos dir))
+(defn positions [dirs] (reductions apply-dir [0 0 0] dirs))
 
 ;; -----------------------------------------------------------------------------
 
