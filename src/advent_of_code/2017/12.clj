@@ -2,19 +2,24 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
-(defn program-group [program pipes]
-  (if-let [programs (get pipes program)]
-    (conj (set (mapcat #(program-group % (dissoc pipes program)) programs))
-          program)
-    #{program}))
+(defn group* [seen node connections]
+  (if (contains? @seen node)
+    '()
+    (do (swap! seen conj node)
+        (cons node
+              (mapcat #(group* seen % (dissoc connections node))
+                      (remove @seen (get connections node)))))))
 
-(defn groups [pipes]
+(defn node-group [node connections]
+  (group* (atom #{}) node connections))
+
+(defn groups [connections]
   (loop [gs []
-         pipes pipes]
-    (if-let [x (first pipes)]
-      (let [g (program-group (first x) pipes)]
+         connections connections]
+    (if-let [x (first connections)]
+      (let [g (node-group (first x) connections)]
         (recur (conj gs g)
-               (apply dissoc pipes g)))
+               (apply dissoc connections g)))
       gs)))
 
 ;; -----------------------------------------------------------------------------
@@ -32,7 +37,8 @@
 
 (comment
   ;; Part One
-  (count (program-groups "0" input))
+  (count (node-group "0" input))
+
 
   ;; Part Two
   (count (groups input))
