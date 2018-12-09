@@ -26,7 +26,8 @@
         5 "f"} i i))
 
 (defn get-coords-by-id [xs]
-  (reduce (fn [acc [i v]] (assoc acc (idx-to-char i) v)) {} (map-indexed vector xs)))
+  (reduce (fn [acc [i v]] (assoc acc (idx-to-char i) v)) {}
+          (map-indexed vector xs)))
 
 (defn closest-coord [v coords-by-id]
   (let [min-dists (sort-by :dist <
@@ -54,20 +55,22 @@
                      (for [y (range (inc min-y) (dec max-y))]
                        [[min-x y] [max-x y]]))))))
 
-
-(defn region-sizes [coords-by-id]
+(defn grid-coords [coords-by-id]
   (let [[min-x min-y] (reduce-coords min (vals coords-by-id))
         [max-x max-y] (reduce-coords max (vals coords-by-id))]
-    (reduce
-     (fn [acc v]
-       (let [closest-coord-id (closest-coord v coords-by-id)]
-         (cond-> acc
-           closest-coord-id
-           (update closest-coord-id (fn [s] (inc (or s 0)))))))
-     {}
-     (for [x (range min-x max-x)
-           y (range min-y max-y)]
-       [x y]))))
+    (for [x (range min-x max-x)
+          y (range min-y max-y)]
+      [x y])))
+
+(defn region-sizes [coords-by-id]
+  (reduce
+   (fn [acc v]
+     (let [closest-coord-id (closest-coord v coords-by-id)]
+       (cond-> acc
+         closest-coord-id
+         (update closest-coord-id (fn [s] (inc (or s 0)))))))
+   {}
+   (grid-coords coords-by-id)))
 
 (defn part-one [coords]
   (let [buf-size 10
@@ -94,3 +97,19 @@
   )
 
 ;; -------------------------------------------------------------------------
+
+(defn total-distance [v coords]
+  (reduce + (map (fn [c] (manhattan-distance c v)) coords)))
+
+(defn part-two [coords max-dist]
+  (reduce
+   (fn [acc v]
+     (cond-> acc
+       (< (total-distance v coords) max-dist)
+       (inc)))
+   0
+   (grid-coords (get-coords-by-id coords))))
+
+(comment
+  (time (def res-part-two (part-two coords 10000)))
+  )
