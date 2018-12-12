@@ -66,19 +66,48 @@
                                               (fn [c] (conj (or c []) current-node-id))))
                      x)))))
 
+(defn construct-tree [xs]
+  (select-keys
+   (reduce
+    handle-step
+    {:current-node-id 0
+     :node-count 0
+     :nodes {}
+     :path [0]
+     :tree {}}
+    xs)
+   [:nodes :tree]))
+
 (defn part-one [xs]
-  (let [g (reduce
-           handle-step
-           {:current-node-id 0
-            :node-count 0
-            :nodes {}
-            :path [0]
-            :tree {}}
-           xs)]
+  (let [g (construct-tree xs)]
     (reduce + (mapcat :metadata (vals (:nodes g))))))
 
 (comment
   (part-one input-data-sample) ;; => 138
   (part-one input-data)
   41555
+  )
+
+;; -------------------------------------------------------------------------
+
+(defn node-value [{:keys [child-nodes metadata] :as node} nodes]
+  (if (empty? child-nodes)
+    (reduce + metadata)
+    (reduce +
+            (map (fn [m]
+                   (if (<= m (count child-nodes))
+                     (let [child-node (get nodes (get child-nodes (dec m)))]
+                       (node-value child-node nodes))
+                     0))
+                 metadata))))
+
+(defn part-two [xs]
+  (let [g (construct-tree xs)
+        root-node-id (ffirst (:tree g))
+        root-node (get (:nodes g) root-node-id)]
+    (node-value root-node (:nodes g))))
+
+(comment
+  (part-two input-data-sample)
+  (part-two input-data)
   )
