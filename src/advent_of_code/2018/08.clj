@@ -11,19 +11,6 @@
 (def input-data (parse-line (first input-lines)))
 (def input-data-sample (parse-line "2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2"))
 
-(defn new-node [child-count]
-  {:child-count child-count
-   :child-nodes []
-   :metadata []})
-
-(defn to-node [g path]
-  (reduce (fn [acc i]
-            (get acc i))
-          g
-          path))
-
-(defn update-node [g path])
-
 (defn handle-step [{:keys [current-node-id nodes path tree node-count] :as acc} x]
   (let [node (get nodes current-node-id)
         child-nodes (:child-nodes node)
