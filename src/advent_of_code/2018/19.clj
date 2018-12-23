@@ -18,11 +18,11 @@
   (let [[fn-name a b c] (str/split line #" ")]
     {:fn-name fn-name
      :fn (get instruction-by-name fn-name)
-     :args (mapv #(bigint (Long/parseLong %)) [a b c])}))
+     :args (mapv #(Long/parseLong %) [a b c])}))
 
 (defn parse-program [lines]
   {:instruction-pointer
-   (bigint (Long/parseLong (second (re-find #"ip (\d)" (first lines)))))
+   (Long/parseLong (second (re-find #"ip (\d)" (first lines))))
    :instructions
    (mapv parse-line (rest lines))})
 
@@ -48,6 +48,10 @@
        (:registers)
        (first)))
 
+(defn sum-of-factors [x]
+  (reduce + (filter (fn [v] (zero? (mod x v)))
+                    (range 1 (inc x)))))
+
 (defn part-two [lines]
   (->> (-> (parse-program lines)
            (assoc :registers [1 0 0 0 0 0]))
@@ -58,10 +62,6 @@
        (sort >)
        (first)
        (sum-of-factors)))
-
-(defn sum-of-factors [x]
-  (reduce + (filter (fn [v] (zero? (mod x v)))
-                    (range 1 (inc x)))))
 
 (comment
   (part-one input-lines-sample)
