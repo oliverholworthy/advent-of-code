@@ -16,51 +16,74 @@
     {:opcode (Long/parseLong (subs op-str (- (count op-str) 2)))
      :parameter-modes (mapv (fn [c] (case c \1 :immediate \0 :position :position)) (reverse (subs op-str 0 (- (count op-str) 2))))}))
 
-(defn step [state position]
-  (let [{:keys [opcode parameter-modes]} (read-op-code (get state position))
+(defn step [{:keys [mem position inputs outputs] :as state}]
+  (let [{:keys [opcode parameter-modes]} (read-op-code (get mem position))
         get-value (fn [mode v] (case mode
                                 :immediate v
-                                :position (get state v)))
-        get-params (fn [] [(get-value (get parameter-modes 0) (get state (inc position)))
-                          (get-value (get parameter-modes 1) (get state (+ position 2)))
-                          (get state (+ position 3))])]
+                                :position (get mem v)))
+        params [(get-value (get parameter-modes 0) (get mem (inc position)))
+                (get-value (get parameter-modes 1) (get mem (+ position 2)))
+                (get mem (+ position 3))]]
     (case opcode
-      1 [(let [[a b i] (get-params)]
-           (assoc state i (+ a b)))
-         (+ 4 position)]
-      2 [(let [[a b i] (get-params)]
-           (assoc state i (* a b)))
-         (+ 4 position)]
-      3 (let [v (Long/parseLong (read-line))
-              i (get state (inc position))]
-          [(assoc state i v) (+ 2 position)])
-      4 (let [[v] (get-params)]
-          [(do (println v) state) (+ 2 position)])
-      5 (let [[a b] (get-params)]
-          (if (not (zero? a))
-            [state b]
-            [state (+ position 3)]))
-      6 (let [[a b] (get-params)]
-          (if (zero? a)
-            [state b]
-            [state (+ position 3)]))
-      7 [(let [[a b i] (get-params)]
-           (assoc state i (if (< a b) 1 0)))
-         (+ position 4)]
-      8 [(let [[a b i] (get-params)]
-           (assoc state i (if (= a b) 1 0)))
-         (+ position 4)]
-      99 [state position])))
+      1 (assoc state
+               :mem
+               (let [[a b i] params]
+                 (assoc mem i (+ a b)))
+               :position
+               (+ 4 position))
+      2 (assoc state
+               :mem
+               (let [[a b i] params]
+                 (assoc mem i (* a b)))
+               :position
+               (+ 4 position))
+      3 (if-let [v (first inputs)]
+          (assoc state :inputs (rest inputs) :mem (assoc mem (get mem (inc position)) v) :position (+ 2 position))
+          (assoc state :awaiting-input true))
+      4 (assoc state
+               :position
+               (+ 2 position)
+               :outputs
+               (let [[v] params]
+                 (conj outputs v)))
+      5 (assoc state
+               :position
+               (let [[a b] params]
+                 (if (not (zero? a))
+                   b
+                   (+ position 3))))
+      6 (assoc state
+               :position
+               (let [[a b] params]
+                 (if (zero? a)
+                   b
+                   (+ position 3))))
+      7 (assoc state
+               :mem
+               (let [[a b i] params]
+                 (assoc mem i (if (< a b) 1 0)))
+               :position
+               (+ position 4))
+      8 (assoc state
+               :mem
+               (let [[a b i] params]
+                 (assoc mem i (if (= a b) 1 0)))
+               :position
+               (+ position 4))
+      99 (assoc state :halted true))))
 
-(defn run [program]
-  (loop [program program
-         position 0
+(defn run [state]
+  (loop [state state
          steps 0]
-    (let [[new-state new-pos] (step program position)]
-      (if (and (= new-state program) (= new-pos position))
-        [program steps]
-        (recur new-state new-pos (inc steps))))))
+    (let [new-state (step state)]
+      (if (or (:halted new-state) (:awaiting-input new-state))
+        new-state
+        (recur new-state (inc steps))))))
+
+(defn init-state [program inputs]
+  {:mem program :position 0 :inputs inputs :outputs []})
 
 (comment
-  (run program)
+  (:outputs (run (init-state program [1])))
+  (:outputs (run (init-state program [5])))
   )
