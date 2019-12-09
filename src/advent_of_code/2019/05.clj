@@ -21,13 +21,18 @@
 
 (defn step [{:keys [mem position inputs outputs relative-base] :as state}]
   (let [{:keys [opcode parameter-modes]} (read-op-code (get mem position))
-        get-value (fn [mode v] (case mode
-                                :relative (get mem (+ v relative-base))
-                                :immediate v
-                                :position (get mem v)))
-        params [(get-value (get parameter-modes 0) (get mem (+ position 1)))
-                (get-value (get parameter-modes 1) (get mem (+ position 2)))
-                (get mem (+ position 3))]]
+        get-value (fn [mode pos]
+                    (case mode
+                      :position (get mem (get mem pos))
+                      :immediate (get mem pos)
+                      :relative (get mem (+ (get mem pos) relative-base))))
+        get-position (fn [mode pos]
+                       (case mode
+                         :relative (+ (get mem pos) relative-base)
+                         :position (get mem pos)))
+        params [(get-value (get parameter-modes 0) (+ position 1))
+                (get-value (get parameter-modes 1) (+ position 2))
+                (get-position (get parameter-modes 2) (+ position 3))]]
     (case opcode
       1 (assoc state
                :mem
@@ -42,7 +47,7 @@
                :position
                (+ 4 position))
       3 (if-let [v (first inputs)]
-          (let [i (get mem (inc position))]
+          (let [i (get-position (get parameter-modes 0) (inc position))]
             (assoc state :inputs (rest inputs) :mem (assoc mem i v) :position (+ 2 position)))
           (assoc state :awaiting-input true))
       4 (assoc state
