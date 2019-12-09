@@ -12,16 +12,20 @@
 (def program (parse-input (first input)))
 
 (defn read-op-code [op-code]
-  (let [op-str (format "%05d" op-code)]
+  (let [op-str (format "%05d" (int op-code))]
     {:opcode (Long/parseLong (subs op-str (- (count op-str) 2)))
-     :parameter-modes (mapv (fn [c] (case c \1 :immediate \0 :position :position)) (reverse (subs op-str 0 (- (count op-str) 2))))}))
+     :parameter-modes (mapv (fn [c] (case c \2 :relative \1 :immediate \0 :position :position))
+                            (reverse (subs op-str 0 (- (count op-str) 2))))}))
 
-(defn step [{:keys [mem position inputs outputs] :as state}]
+(read-op-code 203)
+
+(defn step [{:keys [mem position inputs outputs relative-base] :as state}]
   (let [{:keys [opcode parameter-modes]} (read-op-code (get mem position))
         get-value (fn [mode v] (case mode
+                                :relative (get mem (+ v relative-base))
                                 :immediate v
                                 :position (get mem v)))
-        params [(get-value (get parameter-modes 0) (get mem (inc position)))
+        params [(get-value (get parameter-modes 0) (get mem (+ position 1)))
                 (get-value (get parameter-modes 1) (get mem (+ position 2)))
                 (get mem (+ position 3))]]
     (case opcode
@@ -38,7 +42,8 @@
                :position
                (+ 4 position))
       3 (if-let [v (first inputs)]
-          (assoc state :inputs (rest inputs) :mem (assoc mem (get mem (inc position)) v) :position (+ 2 position))
+          (let [i (get mem (inc position))]
+            (assoc state :inputs (rest inputs) :mem (assoc mem i v) :position (+ 2 position)))
           (assoc state :awaiting-input true))
       4 (assoc state
                :position
@@ -61,15 +66,16 @@
       7 (assoc state
                :mem
                (let [[a b i] params]
-                 (assoc mem i (if (< a b) 1 0)))
+                 (assoc mem i (if (< a b) 1N 0N)))
                :position
                (+ position 4))
       8 (assoc state
                :mem
                (let [[a b i] params]
-                 (assoc mem i (if (= a b) 1 0)))
+                 (assoc mem i (if (= a b) 1N 0N)))
                :position
                (+ position 4))
+      9 (let [[a] params] (assoc state :relative-base (+ relative-base a) :position (+ position 2)))
       99 (assoc state :halted true))))
 
 (defn run [state]
@@ -81,7 +87,7 @@
         (recur new-state (inc steps))))))
 
 (defn init-state [program inputs]
-  {:mem program :position 0 :inputs inputs :outputs []})
+  {:mem (mapv bigint (concat program (repeat 1e6 0))) :position 0 :inputs inputs :outputs [] :relative-base 0N})
 
 (comment
   (:outputs (run (init-state program [1])))
