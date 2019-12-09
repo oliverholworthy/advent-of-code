@@ -17,8 +17,6 @@
      :parameter-modes (mapv (fn [c] (case c \2 :relative \1 :immediate \0 :position :position))
                             (reverse (subs op-str 0 (- (count op-str) 2))))}))
 
-(read-op-code 203)
-
 (defn step [{:keys [mem position inputs outputs relative-base] :as state}]
   (let [{:keys [opcode parameter-modes]} (read-op-code (get mem position))
         get-value (fn [mode pos]
@@ -92,7 +90,7 @@
         (recur new-state (inc steps))))))
 
 (defn init-state [program inputs]
-  {:mem (mapv bigint (concat program (repeat 1e6 0))) :position 0 :inputs inputs :outputs [] :relative-base 0N})
+  {:mem (mapv bigint program) :position 0 :inputs inputs :outputs [] :relative-base 0N})
 
 (comment
   (:outputs (run (init-state program [1])))

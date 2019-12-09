@@ -19,7 +19,7 @@
                new-amps)))))
 
 (defn highest-signal [program lb ub]
-  (first (sort-by second > (map (juxt identity (partial run-with-feedback program)) (permutations (range lb ub))))))
+  (first (sort-by second > (map (juxt identity (partial run-phase-settings program)) (permutations (range lb ub))))))
 
 (comment
   (highest-signal program 0 5) ;; => [[4 2 1 0 3] 34686]
