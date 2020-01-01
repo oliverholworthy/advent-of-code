@@ -59,13 +59,21 @@
 
 (defn parse-grid
   [input]
-  (let [grid (mapv
+  (let [y-max (count input)
+        x-max (count (first input))
+        edge-width 4
+        grid (mapv
               (fn [[y row]]
                 (mapv (fn [[x c]]
                         (let [portal (get-portal input [y x])]
                           (cond-> {:coord [y x] :char c}
                             portal
-                            (assoc :portal portal))))
+                            (assoc :portal portal
+                                   :portal-position
+                                   (if (and (> y edge-width) (< y (- y-max edge-width))
+                                            (> x edge-width) (< x (- x-max edge-width)))
+                                     :inner
+                                     :outer)))))
                       (map-indexed vector row)))
               (map-indexed vector input))
         portals (get-portal-mapping grid)]
@@ -115,11 +123,87 @@
    (priority-map start [0])
    area-init))
 
+(defn get-neighbours-recursive [area v]
+  (let [[level y x] v
+        node (get-in area [y x])
+        portal-to (:portal-to node)
+        portal-level (case (:portal-position node) :inner (inc level) :outer (dec level) nil)
+        explore-coords (mapv (fn [c] {:coord c :level level})
+                            [[y (dec x)]
+                             [(dec y) x]
+                             [(inc y) x]
+                             [y (inc x)]])
+        ;; _ (when (and portal-to portal-level (>= portal-level 0) (= (:portal-position node) :outer))
+        ;;     (println "outer" "level" level "->" portal-level))
+        explore-coords (cond-> explore-coords
+                         (and portal-to portal-level (>= portal-level 0))
+                         (conj {:coord portal-to :level portal-level}))]
+    (reduce (fn [neighbours {:keys [coord] :as neighbour}]
+              (let [node (get-in area coord)]
+                (cond-> neighbours
+                  (and node (#{\.} (:char node)))
+                  (conj [(:level neighbour) (first coord) (second coord)]))))
+            []
+            explore-coords)))
+
+(defn merge-frontier
+  [val-in-result val-in-latter]
+  (first (sort-by second [val-in-result val-in-latter])))
+
+(defn shortest-paths-recursive
+  [area-init start neighbours-fn]
+  ((fn explore [explored frontier area]
+     (lazy-seq
+      (when-let [[v [total-cost previous-vertex]] (peek frontier)]
+        (let [path (conj (explored previous-vertex []) v)
+              neighbours (neighbours-fn area v)
+              node (get-in area (subvec v 1 3))]
+          (cons [(assoc node :loc v) total-cost path]
+                (explore (assoc explored v path)
+                         (merge-with
+                          merge-frontier
+                          (pop frontier)
+                          (into {}
+                                (for [n (remove explored neighbours)]
+                                  {n [(+ total-cost 1) v]})))
+                         area))))))
+   {}
+   (priority-map start [0])
+   area-init))
+
+(defn print-grid [g]
+  (println (str/join "\n"
+                     (mapv (fn [row] (str/join
+                                     (map (fn [n] (case (:portal-position n)
+                                                   :inner "?"
+                                                   :outer "@"
+                                                   (:char n))) row)))
+                           g))))
+
 (comment
   ;; Part One
-  (let [grid (parse-grid input)
-        start (first (filter (fn [coord] (= "AA" (:portal (get-in grid coord)))) (grid-coords grid)))
-        end (first (filter (fn [coord] (= "ZZ" (:portal (get-in grid coord)))) (grid-coords grid)))]
-    (filter (fn [[{:keys [coord]} _ _]] (= coord end))
-            (shortest-paths grid start get-neighbours)))
+  (time
+   (def res-one
+     (let [grid (parse-grid input)
+           start (first (filter (fn [coord] (= "AA" (:portal (get-in grid coord)))) (grid-coords grid)))
+           end (first (filter (fn [coord] (= "ZZ" (:portal (get-in grid coord)))) (grid-coords grid)))]
+       (first
+        (filter (fn [[{:keys [coord]} _ _]] (= coord end))
+                (shortest-paths grid start get-neighbours))))))
+
+  (print-grid (parse-grid input))
+
+  ;; Part Two
+  (time
+   (def res-two
+     (let [grid (parse-grid input)
+           start (first (filter (fn [coord] (= "AA" (:portal (get-in grid coord)))) (grid-coords grid)))
+           end (first (filter (fn [coord] (= "ZZ" (:portal (get-in grid coord)))) (grid-coords grid)))]
+       (first
+        (filter (fn [[i [{:keys [loc]} _ _]]]
+                  (and (= 0 (first loc))
+                       (= end (subvec loc 1 3))))
+                (map-indexed vector (shortest-paths-recursive grid
+                                                              [0 (first start) (second start)]
+                                                              get-neighbours-recursive)))))))
   )
